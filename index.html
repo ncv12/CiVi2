@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống STEM - Học Sinh</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 30px; border-radius: 12px; shadow: 0 4px 10px rgba(0,0,0,0.1); width: 320px; text-align: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #218838; }
+        .hidden { display: none; }
+        .status { font-size: 13px; margin-top: 10px; color: #666; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 id="title">Đăng Ký Tài Khoản</h2>
+    
+    <div id="step-register">
+        <input type="text" id="reg-name" placeholder="Họ và tên học sinh">
+        <input type="password" id="reg-pass" placeholder="Tạo mật khẩu">
+        <button onclick="handleRegister()">Đăng Ký</button>
+        <p class="status">Đã có tài khoản? <a href="#" onclick="showLogin()">Đăng nhập</a></p>
+    </div>
+
+    <div id="step-login" class="hidden">
+        <input type="text" id="login-name" placeholder="Nhập tên đã đăng ký">
+        <input type="password" id="login-pass" placeholder="Nhập mật khẩu">
+        <button onclick="handleLogin()" style="background: #007bff;">Đăng Nhập</button>
+    </div>
+
+    <div id="step-folder" class="hidden">
+        <p>Chào <b id="user-display"></b>!</p>
+        <input type="text" id="folder-name" placeholder="Tên thư mục muốn tạo">
+        <button onclick="createFolder()" style="background: #6f42c1;">Tạo Thư Mục</button>
+    </div>
+    
+    <p id="msg" style="color: red; font-size: 14px; margin-top: 10px;"></p>
+</div>
+
+<script>
+   // --- DÁN CONFIG MỚI CỦA BẠN VÀO ĐÂY ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyCep66eHM3yZWzPy5TPQvKrLy2ZkzH6OqU",
+    authDomain: "cdsl3b13-19b3c.firebaseapp.com",
+    databaseURL: "https://cdsl3b13-19b3c-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "cdsl3b13-19b3c",
+    storageBucket: "cdsl3b13-19b3c.firebasestorage.app",
+    messagingSenderId: "189558120626",
+    appId: "1:189558120626:web:17b402865414c96ce2a9ab"
+  };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let currentUser = null;
+
+    function showLogin() {
+        document.getElementById('title').innerText = "Đăng Nhập";
+        document.getElementById('step-register').classList.add('hidden');
+        document.getElementById('step-login').classList.remove('hidden');
+    }
+
+    // Đăng ký: Chỉ lưu thông tin vào DB
+    function handleRegister() {
+        const name = document.getElementById('reg-name').value.trim();
+        const pass = document.getElementById('reg-pass').value.trim();
+        if(!name || !pass) return alert("Vui lòng điền đủ!");
+
+        db.ref('users/' + name).set({ password: pass }, (err) => {
+            if(!err) {
+                alert("Đăng ký thành công! Bây giờ hãy đăng nhập lại.");
+                showLogin();
+            }
+        });
+    }
+
+    // Đăng nhập: Kiểm tra mật khẩu trong DB
+    function handleLogin() {
+        const name = document.getElementById('login-name').value.trim();
+        const pass = document.getElementById('login-pass').value.trim();
+
+        db.ref('users/' + name).once('value', (snapshot) => {
+            const data = snapshot.val();
+            if(data && data.password === pass) {
+                currentUser = name;
+                document.getElementById('title').innerText = "Tạo Thư Mục";
+                document.getElementById('user-display').innerText = name;
+                document.getElementById('step-login').classList.add('hidden');
+                document.getElementById('step-folder').classList.remove('hidden');
+            } else {
+                document.getElementById('msg').innerText = "Sai tên hoặc mật khẩu!";
+            }
+        });
+    }
+
+    // Tạo thư mục: Gửi dữ liệu về cho giáo viên
+    function createFolder() {
+        const fName = document.getElementById('folder-name').value.trim();
+        if(!fName) return alert("Nhập tên thư mục!");
+
+        db.ref('class8_13').push({
+            studentName: currentUser,
+            folderName: fName,
+            password: "x" // Bảo mật: không gửi pass vào bảng này nếu không cần
+        }).then(() => {
+            alert("Đã tạo thư mục thành công!");
+            location.reload(); // Reset lại trang
+        });
+    }
+</script>
+</body>
+</html>
