@@ -1,34 +1,165 @@
-<div id="step-folder" class="hidden">
-        <h2>📂 Tạo Thư Mục Thực Hành</h2>
-        <p style="color:#4361ee">Chào bạn: <b id="user-display"></b></p>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Thực Hành STEM</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        :root { --primary: #4361ee; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; margin: 0; min-height: 100vh; align-items: center; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        h2 { color: #2b2d42; margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #edf2f4; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-reg { background: var(--primary); }
+        .btn-login { background: #3f37c9; }
+        .btn-create { background: #7209b7; }
+        .hidden { display: none; }
         
-        <label>Chọn biểu tượng đại diện (20 mẫu):</label>
-        <div class="icon-box" id="icon-picker" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; font-size: 24px;">
-            <span class="selected-icon" onclick="pickIcon('📁', this)">📁</span>
-            <span onclick="pickIcon('🚀', this)">🚀</span>
-            <span onclick="pickIcon('💻', this)">💻</span>
-            <span onclick="pickIcon('⚙️', this)">⚙️</span>
-            <span onclick="pickIcon('🔋', this)">🔋</span>
-            <span onclick="pickIcon('💡', this)">💡</span>
-            <span onclick="pickIcon('🔧', this)">🔧</span>
-            <span onclick="pickIcon('📡', this)">📡</span>
-            <span onclick="pickIcon('🧪', this)">🧪</span>
-            <span onclick="pickIcon('🧬', this)">🧬</span>
-            <span onclick="pickIcon('🤖', this)">🤖</span>
-            <span onclick="pickIcon('🛰️', this)">🛰️</span>
-            <span onclick="pickIcon('🔌', this)">🔌</span>
-            <span onclick="pickIcon('🔬', this)">🔬</span>
-            <span onclick="pickIcon('🛸', this)">🛸</span>
-            <span onclick="pickIcon('🌍', this)">🌍</span>
-            <span onclick="pickIcon('🌈', this)">🌈</span>
-            <span onclick="pickIcon('🔥', this)">🔥</span>
-            <span onclick="pickIcon('💎', this)">💎</span>
-            <span onclick="pickIcon('🏆', this)">🏆</span>
+        /* CSS sửa lỗi hiển thị Icon */
+        .icon-grid { 
+            display: grid; 
+            grid-template-columns: repeat(5, 1fr); 
+            gap: 10px; 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 12px; 
+            margin: 15px 0;
+            border: 1px solid #eee;
+        }
+        .icon-item { 
+            font-size: 24px; 
+            cursor: pointer; 
+            padding: 8px; 
+            border-radius: 8px; 
+            transition: 0.2s;
+            border: 2px solid transparent;
+        }
+        .icon-item:hover { background: #e9ecef; }
+        .selected { border-color: var(--primary); background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        .switch { margin-top: 15px; font-size: 14px; color: #666; }
+        .switch a { color: var(--primary); text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div id="box-reg">
+        <h2>📝 Đăng Ký</h2>
+        <input type="text" id="reg-name" placeholder="Họ và tên em">
+        <input type="password" id="reg-pass" placeholder="Mật khẩu tài khoản">
+        <button class="btn-reg" onclick="doRegister()">Tạo tài khoản</button>
+        <div class="switch">Đã có nick? <a href="#" onclick="showBox('login')">Đăng nhập</a></div>
+    </div>
+
+    <div id="box-login" class="hidden">
+        <h2>🔐 Đăng Nhập</h2>
+        <input type="text" id="login-name" placeholder="Tên đã đăng ký">
+        <input type="password" id="login-pass" placeholder="Mật khẩu">
+        <button class="btn-login" onclick="doLogin()">Vào hệ thống</button>
+        <div class="switch"><a href="#" onclick="showBox('reg')">Quay lại Đăng ký</a></div>
+    </div>
+
+    <div id="box-folder" class="hidden">
+        <h2>📂 Tạo Thư Mục</h2>
+        <p>Chào bạn: <b id="display-name" style="color:var(--primary)"></b></p>
+        <label style="font-size: 13px; color: #888;">Chọn biểu tượng đại diện:</label>
+        
+        <div class="icon-grid" id="picker">
+            <span class="icon-item selected" onclick="setI('📁', this)">📁</span>
+            <span class="icon-item" onclick="setI('🚀', this)">🚀</span>
+            <span class="icon-item" onclick="setI('💻', this)">💻</span>
+            <span class="icon-item" onclick="setI('⚙️', this)">⚙️</span>
+            <span class="icon-item" onclick="setI('🔋', this)">🔋</span>
+            <span class="icon-item" onclick="setI('💡', this)">💡</span>
+            <span class="icon-item" onclick="setI('🔧', this)">🔧</span>
+            <span class="icon-item" onclick="setI('📡', this)">📡</span>
+            <span class="icon-item" onclick="setI('🧪', this)">🧪</span>
+            <span class="icon-item" onclick="setI('🧬', this)">🧬</span>
+            <span class="icon-item" onclick="setI('🤖', this)">🤖</span>
+            <span class="icon-item" onclick="setI('🛰️', this)">🛰️</span>
+            <span class="icon-item" onclick="setI('🔌', this)">🔌</span>
+            <span class="icon-item" onclick="setI('🔬', this)">🔬</span>
+            <span class="icon-item" onclick="setI('🛸', this)">🛸</span>
+            <span class="icon-item" onclick="setI('🌍', this)">🌍</span>
+            <span class="icon-item" onclick="setI('🌈', this)">🌈</span>
+            <span class="icon-item" onclick="setI('🔥', this)">🔥</span>
+            <span class="icon-item" onclick="setI('💎', this)">💎</span>
+            <span class="icon-item" onclick="setI('🏆', this)">🏆</span>
         </div>
 
-        <div class="input-group">
-            <label>Tên thư mục (Nhóm/Tên):</label>
-            <input type="text" id="folder-name" placeholder="Ví dụ: Nhóm 5 - Robot">
-        </div>
-        <button class="btn-create" onclick="createFolder()">Xác nhận gửi bài</button>
+        <input type="text" id="f-name" placeholder="Nhóm/Tên thư mục">
+        <button class="btn-create" onclick="doCreate()">Xác nhận gửi bài</button>
     </div>
+</div>
+
+<script>
+    // Config lấy từ ảnh bạn gửi
+    const firebaseConfig = {
+        apiKey: "AIzaSyCep66eHM3yZWzPy5TPQvKrLy2ZkzH6OqU",
+        authDomain: "cdsl3b13-19b3c.firebaseapp.com",
+        databaseURL: "https://cdsl3b13-19b3c-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "cdsl3b13-19b3c",
+        storageBucket: "cdsl3b13-19b3c.firebasestorage.app",
+        messagingSenderId: "189558120626",
+        appId: "1:189558120626:web:17b402865414c96ce2a9ab"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let userNow = "";
+    let iconNow = "📁";
+
+    function showBox(mode) {
+        document.getElementById('box-reg').classList.toggle('hidden', mode !== 'reg');
+        document.getElementById('box-login').classList.toggle('hidden', mode !== 'login');
+    }
+
+    function setI(icon, el) {
+        iconNow = icon;
+        document.querySelectorAll('.icon-item').forEach(s => s.classList.remove('selected'));
+        el.classList.add('selected');
+    }
+
+    function doRegister() {
+        const n = document.getElementById('reg-name').value.trim();
+        const p = document.getElementById('reg-pass').value.trim();
+        if(!n || !p) return alert("Điền đủ tên và pass nhé!");
+        db.ref('users/' + n).set({ password: p }).then(() => {
+            alert("Đăng ký OK! Giờ đăng nhập lại nha.");
+            showBox('login');
+        });
+    }
+
+    function doLogin() {
+        const n = document.getElementById('login-name').value.trim();
+        const p = document.getElementById('login-pass').value.trim();
+        db.ref('users/' + n).once('value', snap => {
+            if(snap.exists() && snap.val().password === p) {
+                userNow = n;
+                document.getElementById('display-name').innerText = n;
+                document.getElementById('box-login').classList.add('hidden');
+                document.getElementById('box-folder').classList.remove('hidden');
+            } else { alert("Sai tên hoặc mật khẩu!"); }
+        });
+    }
+
+    function doCreate() {
+        const fn = document.getElementById('f-name').value.trim();
+        if(!fn) return alert("Nhập tên thư mục!");
+        db.ref('class8_13').push({
+            studentName: userNow,
+            folderName: fn,
+            icon: iconNow,
+            timestamp: Date.now()
+        }).then(() => {
+            alert("Gửi bài thành công!");
+            location.reload();
+        });
+    }
+</script>
+</body>
+</html>
