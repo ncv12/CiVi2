@@ -3,83 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống STEM - Học Sinh</title>
+    <title>Hệ Thống Thực Hành STEM 2026</title>
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background: white; padding: 30px; border-radius: 12px; shadow: 0 4px 10px rgba(0,0,0,0.1); width: 320px; text-align: center; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #218838; }
+        :root { --primary-color: #4361ee; --success-color: #4cc9f0; --bg-color: #f8f9fa; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        
+        .auth-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 350px; transition: all 0.3s ease; }
+        h2 { color: #2b2d42; margin-bottom: 25px; font-size: 24px; font-weight: 700; }
+        
+        .input-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; font-size: 14px; color: #8d99ae; margin-bottom: 5px; }
+        input { width: 100%; padding: 12px; border: 2px solid #edf2f4; border-radius: 10px; font-size: 16px; transition: 0.3s; box-sizing: border-box; }
+        input:focus { border-color: var(--primary-color); outline: none; }
+        
+        button { width: 100%; padding: 14px; border: none; border-radius: 10px; color: white; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-reg { background: var(--primary-color); }
+        .btn-login { background: #3f37c9; }
+        .btn-create { background: #7209b7; }
+        button:hover { opacity: 0.9; transform: translateY(-2px); }
+
+        .icon-box { display: flex; justify-content: space-around; font-size: 28px; margin: 20px 0; background: #f1f3f5; padding: 10px; border-radius: 12px; }
+        .icon-box span { cursor: pointer; padding: 5px; border-radius: 8px; transition: 0.2s; }
+        .icon-box span:hover { background: #dee2e6; }
+        .selected-icon { border: 2px solid var(--primary-color) !important; background: white !important; }
+
         .hidden { display: none; }
-        .status { font-size: 13px; margin-top: 10px; color: #666; }
+        .switch-mode { margin-top: 20px; font-size: 14px; color: #8d99ae; }
+        .switch-mode a { color: var(--primary-color); text-decoration: none; font-weight: bold; }
+        #error-msg { color: #ef233c; font-size: 14px; margin-top: 10px; min-height: 20px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2 id="title">Đăng Ký Tài Khoản</h2>
-    
+<div class="auth-card">
     <div id="step-register">
-        <input type="text" id="reg-name" placeholder="Họ và tên học sinh">
-        <input type="password" id="reg-pass" placeholder="Tạo mật khẩu">
-        <button onclick="handleRegister()">Đăng Ký</button>
-        <p class="status">Đã có tài khoản? <a href="#" onclick="showLogin()">Đăng nhập</a></p>
+        <h2>📝 Đăng Ký STEM</h2>
+        <div class="input-group">
+            <label>Họ và tên của em:</label>
+            <input type="text" id="reg-name" placeholder="Ví dụ: Nguyễn Văn A">
+        </div>
+        <div class="input-group">
+            <label>Mật khẩu (Gợi ý: Có chữ Hoa, Số, @):</label>
+            <input type="password" id="reg-pass" placeholder="••••••••">
+        </div>
+        <button class="btn-reg" onclick="handleRegister()">Tạo tài khoản</button>
+        <div class="switch-mode">Em đã có tài khoản? <a href="#" onclick="toggleMode('login')">Đăng nhập ngay</a></div>
     </div>
 
     <div id="step-login" class="hidden">
-        <input type="text" id="login-name" placeholder="Nhập tên đã đăng ký">
-        <input type="password" id="login-pass" placeholder="Nhập mật khẩu">
-        <button onclick="handleLogin()" style="background: #007bff;">Đăng Nhập</button>
+        <h2>🔐 Đăng Nhập</h2>
+        <div class="input-group">
+            <label>Tên đăng nhập:</label>
+            <input type="text" id="login-name" placeholder="Tên em đã đăng ký">
+        </div>
+        <div class="input-group">
+            <label>Mật khẩu:</label>
+            <input type="password" id="login-pass" placeholder="••••••••">
+        </div>
+        <button class="btn-login" onclick="handleLogin()">Vào hệ thống</button>
+        <div class="switch-mode"><a href="#" onclick="toggleMode('reg')">Quay lại Đăng ký</a></div>
     </div>
 
     <div id="step-folder" class="hidden">
-        <p>Chào <b id="user-display"></b>!</p>
-        <input type="text" id="folder-name" placeholder="Tên thư mục muốn tạo">
-        <button onclick="createFolder()" style="background: #6f42c1;">Tạo Thư Mục</button>
+        <h2>📂 Tạo Thư Mục</h2>
+        <p style="color:#4361ee">Chào bạn: <b id="user-display"></b></p>
+        
+        <label>Chọn biểu tượng yêu thích:</label>
+        <div class="icon-box" id="icon-picker">
+            <span class="selected-icon" onclick="pickIcon('📁', this)">📁</span>
+            <span onclick="pickIcon('🚀', this)">🚀</span>
+            <span onclick="pickIcon('💻', this)">💻</span>
+            <span onclick="pickIcon('🔋', this)">🔋</span>
+            <span onclick="pickIcon('💡', this)">💡</span>
+        </div>
+
+        <div class="input-group">
+            <label>Tên thư mục thực hành:</label>
+            <input type="text" id="folder-name" placeholder="Ví dụ: Nhóm 1 - Pin mặt trời">
+        </div>
+        <button class="btn-create" onclick="createFolder()">Xác nhận tạo</button>
     </div>
-    
-    <p id="msg" style="color: red; font-size: 14px; margin-top: 10px;"></p>
+
+    <div id="error-msg"></div>
 </div>
 
 <script>
-   // --- DÁN CONFIG MỚI CỦA BẠN VÀO ĐÂY ---
-  const firebaseConfig = {
-    apiKey: "AIzaSyCep66eHM3yZWzPy5TPQvKrLy2ZkzH6OqU",
-    authDomain: "cdsl3b13-19b3c.firebaseapp.com",
-    databaseURL: "https://cdsl3b13-19b3c-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "cdsl3b13-19b3c",
-    storageBucket: "cdsl3b13-19b3c.firebasestorage.app",
-    messagingSenderId: "189558120626",
-    appId: "1:189558120626:web:17b402865414c96ce2a9ab"
-  };
+    // --- DÁN CONFIG THẬT CỦA BẠN VÀO ĐÂY ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyCep66eHM3yZWzPy5TPQvKrLy2ZkzH6OqU",
+        authDomain: "cdsl3b13-19b3c.firebaseapp.com",
+        databaseURL: "https://cdsl3b13-19b3c-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "cdsl3b13-19b3c",
+        storageBucket: "cdsl3b13-19b3c.firebasestorage.app",
+        messagingSenderId: "189558120626",
+        appId: "1:189558120626:web:17b402865414c96ce2a9ab"
+    };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    let currentUser = null;
+    let currentUser = "";
+    let selectedIcon = "📁";
 
-    function showLogin() {
-        document.getElementById('title').innerText = "Đăng Nhập";
-        document.getElementById('step-register').classList.add('hidden');
-        document.getElementById('step-login').classList.remove('hidden');
+    function toggleMode(mode) {
+        document.getElementById('step-register').classList.toggle('hidden', mode === 'login');
+        document.getElementById('step-login').classList.toggle('hidden', mode === 'reg');
+        document.getElementById('error-msg').innerText = "";
     }
 
-    // Đăng ký: Chỉ lưu thông tin vào DB
+    function pickIcon(icon, el) {
+        selectedIcon = icon;
+        document.querySelectorAll('#icon-picker span').forEach(s => s.classList.remove('selected-icon'));
+        el.classList.add('selected-icon');
+    }
+
     function handleRegister() {
         const name = document.getElementById('reg-name').value.trim();
         const pass = document.getElementById('reg-pass').value.trim();
-        if(!name || !pass) return alert("Vui lòng điền đủ!");
+        if(!name || !pass) return alert("Vui lòng không để trống!");
 
         db.ref('users/' + name).set({ password: pass }, (err) => {
             if(!err) {
-                alert("Đăng ký thành công! Bây giờ hãy đăng nhập lại.");
-                showLogin();
+                alert("Đăng ký thành công! Hãy Đăng nhập để tiếp tục.");
+                toggleMode('login');
             }
         });
     }
 
-    // Đăng nhập: Kiểm tra mật khẩu trong DB
     function handleLogin() {
         const name = document.getElementById('login-name').value.trim();
         const pass = document.getElementById('login-pass').value.trim();
@@ -88,28 +141,27 @@
             const data = snapshot.val();
             if(data && data.password === pass) {
                 currentUser = name;
-                document.getElementById('title').innerText = "Tạo Thư Mục";
                 document.getElementById('user-display').innerText = name;
                 document.getElementById('step-login').classList.add('hidden');
                 document.getElementById('step-folder').classList.remove('hidden');
             } else {
-                document.getElementById('msg').innerText = "Sai tên hoặc mật khẩu!";
+                document.getElementById('error-msg').innerText = "❌ Sai tên hoặc mật khẩu!";
             }
         });
     }
 
-    // Tạo thư mục: Gửi dữ liệu về cho giáo viên
     function createFolder() {
         const fName = document.getElementById('folder-name').value.trim();
-        if(!fName) return alert("Nhập tên thư mục!");
+        if(!fName) return alert("Nhập tên thư mục em muốn tạo!");
 
         db.ref('class8_13').push({
             studentName: currentUser,
             folderName: fName,
-            password: "x" // Bảo mật: không gửi pass vào bảng này nếu không cần
+            icon: selectedIcon,
+            time: new Date().toLocaleString()
         }).then(() => {
-            alert("Đã tạo thư mục thành công!");
-            location.reload(); // Reset lại trang
+            alert("Chúc mừng! Thư mục của em đã được gửi tới thầy.");
+            location.reload();
         });
     }
 </script>
